@@ -1,0 +1,5 @@
+{
+  "name": "混沌分岔之实验场",
+  "description": "一个探索混沌分岔理论的交互式实验平台。通过实时渲染几个吸引子集，并结合 Gemini AI 深度解读几何背后的数学美学与哲学含义。",
+  "requestFramePermissions": []
+}
