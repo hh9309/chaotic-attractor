@@ -47,42 +47,53 @@ const SimulationCanvas: React.FC<Props> = ({ params }) => {
     if (!ctx) return;
 
     const { width, height } = canvas;
+    const currentP = internalParamsRef.current;
     const time = Date.now() * 0.001;
     
-    if (params.mode === 'auto') {
-      if (params.type === 'lorenz') internalParamsRef.current.rho = 28 + Math.sin(time * 0.3) * 10;
-      if (params.type === 'aizawa') internalParamsRef.current.mu = 0.35 + Math.sin(time * 0.2) * 0.1;
-      if (params.type === 'dadras') internalParamsRef.current.mu = 3.0 + Math.sin(time * 0.4) * 0.5;
-      if (params.type === 'thomas') internalParamsRef.current.mu = 0.2081 + Math.sin(time * 0.4) * 0.05;
+    if (currentP.mode === 'auto') {
+      // 使用多重正弦波模拟更复杂的“智能”寻优路径
+      const slow = Math.sin(time * 0.1) * 0.5;
+      const fast = Math.sin(time * 0.5) * 0.2;
+      const combined = slow + fast;
+
+      if (currentP.type === 'lorenz') internalParamsRef.current.rho = 28 + combined * 15;
+      if (currentP.type === 'aizawa') internalParamsRef.current.mu = 0.35 + combined * 0.15;
+      if (currentP.type === 'dadras') internalParamsRef.current.mu = 3.0 + combined * 0.8;
+      if (currentP.type === 'thomas') internalParamsRef.current.mu = 0.2081 + combined * 0.08;
     }
 
-    const currentP = internalParamsRef.current;
-    const dt = 0.015 * params.speed;
+    const dt = 0.015 * currentP.speed;
     
     // 背景淡入淡出实现拖尾效果
     ctx.fillStyle = 'rgba(248, 250, 252, 0.15)'; 
     ctx.fillRect(0, 0, width, height);
 
-    let leadScreenPoints: {x: number, y: number}[] = [];
+    // 智能模式视觉反馈
+    if (currentP.mode === 'auto') {
+      // 添加一个小小的 AI 状态文字
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(79, 70, 229, 0.4)';
+      ctx.fillText('AI EVOLVING...', 20, height - 20);
+    }
 
     particlesRef.current.forEach((p, idx) => {
       let dx = 0, dy = 0, dz = 0;
 
-      if (params.type === 'lorenz') {
+      if (currentP.type === 'lorenz') {
         dx = 10 * (p.y - p.x);
         dy = p.x * (currentP.rho - p.z) - p.y;
         dz = p.x * p.y - (8/3) * p.z;
-      } else if (params.type === 'aizawa') {
+      } else if (currentP.type === 'aizawa') {
         const a = 0.95, b = 0.7, c = 0.6, d = 3.5, e = 0.25, f = 0.1;
         dx = (p.z - b) * p.x - d * p.y;
         dy = d * p.x + (p.z - b) * p.y;
         dz = c + a * p.z - (Math.pow(p.z, 3) / 3) - (p.x * p.x + p.y * p.y) * (1 + e * p.z) + f * p.z * Math.pow(p.x, 3);
-      } else if (params.type === 'dadras') {
+      } else if (currentP.type === 'dadras') {
         const a = 3, b = 2.7, c = 1.7, d = 2, e = 9;
         dx = p.y - a * p.x + b * p.y * p.z;
         dy = c * p.y - p.x * p.z + p.z;
         dz = d * p.x * p.y - e * p.z;
-      } else if (params.type === 'thomas') {
+      } else if (currentP.type === 'thomas') {
         const b = currentP.mu;
         dx = Math.sin(p.y) - b * p.x;
         dy = Math.sin(p.z) - b * p.y;
@@ -94,12 +105,12 @@ const SimulationCanvas: React.FC<Props> = ({ params }) => {
       p.z += dz * dt;
 
       // 如果是第一个粒子且开启了追踪，记录轨迹
-      if (idx === 0 && params.showTrace) {
+      if (idx === 0 && currentP.showTrace) {
         pathRef.current.push({ x: p.x, y: p.y, z: p.z });
         if (pathRef.current.length > 600) pathRef.current.shift();
       }
 
-      const screenPos = getScreenPos(p.x, p.y, p.z, params.type, width, height);
+      const screenPos = getScreenPos(p.x, p.y, p.z, currentP.type, width, height);
       
       ctx.beginPath();
       ctx.arc(screenPos.x, screenPos.y, 1.2, 0, Math.PI * 2);
@@ -108,16 +119,16 @@ const SimulationCanvas: React.FC<Props> = ({ params }) => {
     });
 
     // 绘制主粒子的连续轨迹
-    if (params.showTrace && pathRef.current.length > 2) {
+    if (currentP.showTrace && pathRef.current.length > 2) {
       ctx.beginPath();
       ctx.lineWidth = 1.8;
-      const colors = PALETTES[params.palette];
+      const colors = PALETTES[currentP.palette];
       ctx.strokeStyle = colors[0];
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
 
       pathRef.current.forEach((pt, i) => {
-        const pos = getScreenPos(pt.x, pt.y, pt.z, params.type, width, height);
+        const pos = getScreenPos(pt.x, pt.y, pt.z, currentP.type, width, height);
         if (i === 0) ctx.moveTo(pos.x, pos.y);
         else ctx.lineTo(pos.x, pos.y);
       });
@@ -128,26 +139,29 @@ const SimulationCanvas: React.FC<Props> = ({ params }) => {
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
+  }, []); // 移除 params 依赖，使用 internalParamsRef
 
-    requestRef.current = requestAnimationFrame(draw);
-  }, [params]);
-
-  // 坐标转换辅助函数
+  // 坐标转换辅助函数 - 优化吸引子在画布中的居中表现
   const getScreenPos = (x: number, y: number, z: number, type: string, width: number, height: number) => {
     let scale = height / 60;
-    let offsetX = width / 2;
+    // 向右移动约 2 厘米 (1cm ≈ 37.8px, 2cm ≈ 75px)
+    let offsetX = width / 2 + 75;
     let offsetY = height / 2;
 
     if (type === 'aizawa') {
-      scale = height / 4.2;
-      offsetY = height * 0.65;
+      scale = height / 4.5;
+      // Aizawa 吸引子中心大约在 z=0.5，将其平移至画布中心
+      offsetY = height / 2 + 0.5 * scale;
     } else if (type === 'dadras') {
-      scale = height / 18;
+      scale = height / 22;
+      offsetY = height / 2;
     } else if (type === 'thomas') {
-      scale = height / 10;
+      scale = height / 12;
+      offsetY = height / 2;
     } else if (type === 'lorenz') {
-      scale = height / 65;
-      offsetY = height * 0.85;
+      scale = height / 75;
+      // Lorenz 吸引子中心大约在 z=25，将其平移至画布中心
+      offsetY = height / 2 + 25 * scale;
     }
 
     return {
@@ -165,7 +179,13 @@ const SimulationCanvas: React.FC<Props> = ({ params }) => {
     };
     window.addEventListener('resize', handleResize);
     handleResize();
-    requestRef.current = requestAnimationFrame(draw);
+    
+    const animate = () => {
+      draw();
+      requestRef.current = requestAnimationFrame(animate);
+    };
+    requestRef.current = requestAnimationFrame(animate);
+
     return () => {
       window.removeEventListener('resize', handleResize);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);

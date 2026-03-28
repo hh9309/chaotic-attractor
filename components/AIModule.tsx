@@ -12,6 +12,8 @@ interface Props {
   currentModel: AIModelType;
   onModelChange: (model: AIModelType) => void;
   onApiKeyChange: (key: string) => void;
+  isConfigured: boolean;
+  onConfigured: () => void;
 }
 
 const AIModule: React.FC<Props> = ({ 
@@ -23,7 +25,9 @@ const AIModule: React.FC<Props> = ({
   isAILoading,
   currentModel,
   onModelChange,
-  onApiKeyChange
+  onApiKeyChange,
+  isConfigured,
+  onConfigured
 }) => {
   const [input, setInput] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -34,7 +38,7 @@ const AIModule: React.FC<Props> = ({
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isAILoading) return;
+    if (!input.trim() || isAILoading || !isConfigured) return;
     onCustomQuery(input);
     setInput(''); // 提交后清空输入框
   };
@@ -42,6 +46,7 @@ const AIModule: React.FC<Props> = ({
   const handleConfirmSettings = () => {
     onModelChange(localModel);
     onApiKeyChange(localApiKey);
+    onConfigured();
     setShowSettings(false);
   };
 
@@ -62,8 +67,10 @@ const AIModule: React.FC<Props> = ({
               <span className={`relative inline-flex rounded-full h-3 w-3 ${isAILoading ? 'bg-indigo-600' : 'bg-slate-300'}`}></span>
             </div>
             <div className="flex flex-col">
-              <span className="text-base font-black text-slate-800 uppercase tracking-[0.2em] leading-none">智慧决策中枢</span>
-              <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase">Active Model: {currentModel}</span>
+              <span className="text-sm font-black text-slate-800 uppercase tracking-[0.2em] leading-none">智慧决策中枢</span>
+              <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase">
+                {isConfigured ? `Active Model: ${currentModel}` : '等待配置 AI 引擎...'}
+              </span>
             </div>
           </div>
           
@@ -171,7 +178,7 @@ const AIModule: React.FC<Props> = ({
           <div className="max-w-7xl mx-auto flex gap-10 items-center w-full">
             <form 
               onSubmit={handleSearch}
-              className="flex-1 bg-slate-50/80 hover:bg-white rounded-[35px] flex items-center gap-3 pr-3 border border-slate-200/60 shadow-inner ring-1 ring-transparent focus-within:ring-indigo-100 focus-within:border-indigo-300 transition-all duration-300"
+              className={`flex-1 bg-slate-50/80 hover:bg-white rounded-[35px] flex items-center gap-3 pr-3 border border-slate-200/60 shadow-inner ring-1 ring-transparent focus-within:ring-indigo-100 focus-within:border-indigo-300 transition-all duration-300 ${!isConfigured ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className="pl-8 text-indigo-500 py-6">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -180,16 +187,17 @@ const AIModule: React.FC<Props> = ({
               </div>
               <input
                 type="text"
-                placeholder="在此输入您的问题或指令，例如：'解释这个吸引子的混沌形成原因'..."
+                placeholder={isConfigured ? "在此输入您的问题或指令，例如：'解释这个吸引子的混沌形成原因'..." : "请先在大模型设置中确认配置..."}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="flex-1 bg-transparent border-none focus:ring-0 text-base py-5 px-2 text-slate-700 font-bold placeholder:text-slate-400 placeholder:font-medium"
+                disabled={!isConfigured}
+                className="flex-1 bg-transparent border-none focus:ring-0 text-base py-5 px-2 text-slate-700 font-bold placeholder:text-slate-400 placeholder:font-medium disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
-                disabled={isAILoading || !input.trim()}
+                disabled={isAILoading || !input.trim() || !isConfigured}
                 className={`px-12 py-4 rounded-[28px] text-[13px] font-black transition-all ${
-                  isAILoading || !input.trim()
+                  isAILoading || !input.trim() || !isConfigured
                   ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                   : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-2xl shadow-indigo-500/30 active:scale-95'
                 }`}
@@ -200,11 +208,11 @@ const AIModule: React.FC<Props> = ({
 
             <button
               onClick={onTriggerExplain}
-              disabled={isAILoading}
+              disabled={isAILoading || !isConfigured}
               className={`h-20 w-20 rounded-[35px] flex items-center justify-center bg-white border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all shrink-0 ${
-                isAILoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 active:scale-90 hover:bg-indigo-50 hover:border-indigo-100 text-slate-700 hover:text-indigo-600'
+                isAILoading || !isConfigured ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 active:scale-90 hover:bg-indigo-50 hover:border-indigo-100 text-slate-700 hover:text-indigo-600'
               }`}
-              title="即时生成当前动力学洞察"
+              title={isConfigured ? "即时生成当前动力学洞察" : "请先配置 AI"}
             >
               <div className={`text-4xl transition-all duration-1000 ${isAILoading ? 'animate-spin' : ''}`}>
                 {isAILoading ? '⚛' : '🧠'}

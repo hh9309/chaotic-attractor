@@ -53,7 +53,7 @@ const KnowledgeModule: React.FC<Props> = ({ type }) => {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <div className="h-4 w-1 bg-indigo-600 rounded-full"></div>
-          <h2 className="text-base font-black text-slate-800 uppercase tracking-[0.2em]">实验室 · 动力学导读</h2>
+          <h2 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">实验室 · 动力学导读</h2>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">

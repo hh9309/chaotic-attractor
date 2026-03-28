@@ -47,40 +47,52 @@ const ControlPanel: React.FC<Props> = ({ params, onUpdateParams, isAILoading }) 
   const currentPresets = PRESETS[params.type];
 
   return (
-    <div className="glass rounded-[40px] p-8 w-[340px] space-y-8 pointer-events-auto border-white/40 shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar">
-      {/* 吸引子选择 */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-end">
-          <h2 className="text-lg font-black text-indigo-500 uppercase tracking-widest">推演模式控制</h2>
-          <div className="flex bg-slate-100 p-1 rounded-xl">
+    <div className="glass rounded-[32px] p-5 w-[340px] space-y-6 pointer-events-auto border-white/40 shadow-2xl overflow-y-auto h-full custom-scrollbar">
+      {/* 模式选择 */}
+      <div className="space-y-3">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest border-b border-slate-100/50 pb-1.5">推演模式控制</h2>
+          
+          <div className="flex bg-slate-100/80 p-1 rounded-xl relative w-full">
              <button 
                onClick={() => onUpdateParams({ mode: 'manual' })}
-               className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${params.mode === 'manual' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400'}`}
+               className={`relative z-10 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex-1 ${params.mode === 'manual' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
              >
-               手动
+               手动控制
              </button>
              <button 
                onClick={() => onUpdateParams({ mode: 'auto' })}
-               className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${params.mode === 'auto' ? 'bg-indigo-600 shadow-sm text-white' : 'text-slate-400'}`}
+               className={`relative z-10 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex-1 flex items-center justify-center gap-1 ${params.mode === 'auto' ? 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.4)] text-white' : 'text-slate-400 hover:text-slate-600'}`}
              >
-               智能
+               <svg className={`w-2.5 h-2.5 ${params.mode === 'auto' ? 'animate-pulse' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>
+               智能演化
              </button>
+             {params.mode === 'auto' && (
+               <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+               </span>
+             )}
           </div>
+          
+          <p className="text-[9px] text-slate-400 font-medium px-1 leading-tight">
+            {params.mode === 'auto' ? '系统将自动在相空间中寻找混沌奇点并动态演化参数。' : '您可以自由调节核心参数，探索特定的动力学稳态。'}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 gap-1.5">
           {models.map((m) => (
             <button
               key={m.id}
               onClick={() => onUpdateParams({ type: m.id })}
-              className={`w-full p-4 rounded-2xl text-left transition-all border-2 group ${
+              className={`w-full p-3 rounded-xl text-left transition-all border-2 group ${
                 params.type === m.id 
-                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' 
+                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' 
                   : 'bg-white/40 border-transparent hover:border-indigo-100 text-slate-600'
               }`}
             >
-              <div className="font-black text-sm">{m.label}吸引子</div>
-              <div className={`text-[10px] ${params.type === m.id ? 'text-indigo-100' : 'text-slate-400'}`}>{m.desc}</div>
+              <div className="font-black text-xs">{m.label}吸引子</div>
+              <div className={`text-[9px] ${params.type === m.id ? 'text-indigo-100' : 'text-slate-400'}`}>{m.desc}</div>
             </button>
           ))}
         </div>
@@ -108,10 +120,15 @@ const ControlPanel: React.FC<Props> = ({ params, onUpdateParams, isAILoading }) 
       <div className="space-y-6">
         <div>
           <div className="flex justify-between items-center mb-3">
-            <label className="text-sm font-black text-slate-400 uppercase tracking-widest">
-              混沌核心参数 (λ)
-            </label>
-            <span className={`text-xs font-mono font-bold ${params.mode === 'auto' ? 'text-teal-500 animate-pulse' : 'text-indigo-600'}`}>
+            <div className="flex flex-col">
+              <label className="text-sm font-black text-slate-400 uppercase tracking-widest">
+                混沌核心参数 (λ)
+              </label>
+              <span className="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">
+                {params.mode === 'auto' ? 'AI 正在动态寻优中...' : '等待手动输入参数'}
+              </span>
+            </div>
+            <span className={`text-xs font-mono font-bold px-2 py-1 rounded-md transition-all ${params.mode === 'auto' ? 'bg-indigo-50 text-indigo-600 animate-pulse border border-indigo-100' : 'text-slate-600 bg-slate-50'}`}>
               {params.type === 'lorenz' ? params.rho.toFixed(2) : (params.type === 'thomas' ? params.mu.toFixed(4) : params.mu.toFixed(2))}
             </span>
           </div>
