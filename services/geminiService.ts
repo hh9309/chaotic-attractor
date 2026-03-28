@@ -49,7 +49,8 @@ export const getChaosInsight = async (params: SimulationParams, model: AIModelTy
     });
     return response.text;
   } catch (error) {
-    return "在相空间的缠绕中，我们瞥见了秩序的阴影。";
+    console.error("Chaos Insight Error:", error);
+    return "算力在混沌的湍流中暂时迷失了方向，请稍后再试。";
   }
 };
 

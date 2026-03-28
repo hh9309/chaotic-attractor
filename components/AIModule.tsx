@@ -52,7 +52,7 @@ const AIModule: React.FC<Props> = ({
 
   const modelOptions: { id: AIModelType; label: string; sub: string }[] = [
     { id: 'gemini-3-flash-preview', label: 'Gemini 3 Flash', sub: '极致速度 · 实时响应' },
-    { id: 'deepseek-r1', label: 'DeepSeek R1', sub: '链式思考 · 逻辑推演' },
+    { id: 'deepseek-r1', label: 'DeepSeek R1', sub: '深度思考 · 逻辑推演' },
   ];
 
   return (
@@ -117,7 +117,7 @@ const AIModule: React.FC<Props> = ({
                   </div>
 
                   <div className="pt-5 border-t border-slate-100">
-                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 px-1">手工接收 API-Key</h4>
+                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 px-1">手工输入 API-Key</h4>
                     <div className="space-y-4 px-1">
                       <div className="relative group">
                         <input 
@@ -202,7 +202,7 @@ const AIModule: React.FC<Props> = ({
                   : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-2xl shadow-indigo-500/30 active:scale-95'
                 }`}
               >
-                {isAILoading ? '思考中...' : '提交指令'}
+                {isAILoading ? '思考中...' : '提交并解释'}
               </button>
             </form>
 
